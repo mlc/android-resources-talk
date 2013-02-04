@@ -1,3 +1,7 @@
+% Copyright 2013 Mike Castleman, Meetup, Inc.
+% This work is licensed under a Creative Commons Attribution 3.0
+% United States License
+% http://creativecommons.org/licenses/by/3.0/us/deed.en_US
 \documentclass{beamer}
 \mode<presentation>
 {
@@ -9,9 +13,27 @@
 \usepackage{xunicode}
 \usepackage{xltxtra}
 \usepackage{url}
-\setromanfont[Mapping=tex-text]{DejaVu Serif}
-\setsansfont[Mapping=tex-text]{DejaVu Sans}
-\setmonofont[Mapping=tex-text]{DejaVu Sans Mono}
+\usepackage{polyglossia}
+\usepackage{xcolor}
+\usepackage{listings}
+
+\setsansfont[Mapping=tex-text,ItalicFont={* Italic}]{Roboto}
+\setmonofont{Droid Sans Mono}
+\setdefaultlanguage{english}
+
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\definecolor{dkgreen}{rgb}{0.2,0.9,0.2}
+\lstset{%
+  language=XML,
+  basicstyle=\scriptsize\tt,
+  breaklines=true,
+  showspaces=false,
+  showstringspaces=false,
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen}\addfontfeature{FakeBold=1.5},
+  stringstyle=\color{mauve},
+  numberstyle=\color{red!75}
+}
 
 \title[Android Resources]{Resources on Android}
 
@@ -35,12 +57,112 @@ devices, and you have to test your app on every single one of them.''
 --- People who never develop for Android}
 \end{frame}
 
-\begin{frame}{Four ``Abstract Densities''}
+\begin{frame}{Resources}
+\begin{itemize}
+\item Provide different assets for different devices
+\item Let the platform choose the right one
+\item Set things up \textit{declaritively}: don't write any extra code!
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Resource Types}
+\begin{itemize}
+\item \texttt{drawable}: images etc.
+\item \texttt{layout}
+\item \texttt{values}: strings, styles, themes, integers, arrays
+\item \texttt{anim}, \texttt{color}, \texttt{menu}
+\item \texttt{xml}, \texttt{raw}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Qualifiers}
+\begin{itemize}
+\item OS Version: \texttt{v9} etc.
+\item Screen size: \texttt{small}, \texttt{medium} (phones);
+  \texttt{large}, \texttt{xlarge} (tablets)
+\item Language (and country): \texttt{en}, \texttt{es},
+  \texttt{en-rCA}
+\item Portrait/landscape: \texttt{port}, \texttt{land}
+\item Screen density: \texttt{ldpi}, \texttt{mdpi}, \texttt{hdpi}, \texttt{xhdpi}
+\item Many others, see SDK docs if interested.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Directory structure}
+\includegraphics[width=3.5in]{dir.png}
+\end{frame}
+
+\begin{frame}{Use cases}
+\begin{tabular}{cc}
+\includegraphics[width=1.5in]{layout.png} &
+\includegraphics[height=1.5in]{layout-land.png} \\
+\texttt{res/layout} & \texttt{res/layout-land}
+\end{tabular}
+\end{frame}
+
+\begin{frame}{Use cases}
+\centerline{\includegraphics[width=3.25in]{api-levels.png}}
+
+\centerline{\texttt{res/values/styles.xml}\ \ \texttt{res/values-v11/styles.xml}}
+\end{frame}
+
+\begin{frame}[fragile]{Use cases}
+\begin{itemize}
+\item \texttt{res/values/strings.xml}
+\begin{lstlisting}
+<string name="nice_phone">Nice phone!</string>
+<string name="nice_tablet">Nice tablet!</string>
+<string name="nice_device">@string/nice_phone</string>
+\end{lstlisting}
+\item \texttt{res/values-large/strings.xml}
+\begin{lstlisting}
+<string name="nice_device">@string/nice_tablet</string>
+\end{lstlisting}
+\item \texttt{res/values-it/strings.xml}
+\begin{lstlisting}
+<string name="nice_phone">Bel telefono!</string>
+<string name="nice_tablet">Bel tablet!</string>
+\end{lstlisting}
+\item \texttt{res/layout/activity.xml}
+\begin{lstlisting}
+<TextView android:id="@+id/praise_user_device"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="@string/nice_device"/>
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Nononono}
+\begin{lstlisting}[language=Java]
+public class TurnBlueOnTouch implements View.OnTouchListener {
+  @Override
+  public boolean onTouch(View v, MotionEvent event) {
+    if (event.getActionMasked() == MotionEvent.ACTION_DOWN)
+      v.setColor(Color.argb(255, 0, 0, 127));
+    else if (event.getActionMasked() == MotionEvent.ACTION_UP)
+      v.setColor(Color.BLACK);
+    return false;
+  }
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Yesyesyesyes}
+\begin{lstlisting}
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+  <item android:state_pressed="true" android:color="#ff00007f" />
+  <item android:color="@color/black" />
+</selector>
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Images: Four ``Abstract Densities''}
 \begin{itemize}
 \item \texttt{ldpi}: 75\% of base
-\item \texttt{mdpi}: base image size (iOS ``1x'')
+\item \texttt{mdpi}: base image size
 \item \texttt{hdpi}: 150\% of base
-\item \texttt{xhdpi}: 200\% of base (iOS ``2x'')
+\item \texttt{xhdpi}: 200\% of base
 \end{itemize}
 \begin{tabular}{cccc}
 \includegraphics[scale=0.5]{jogdial_l.png} &
@@ -52,7 +174,7 @@ devices, and you have to test your app on every single one of them.''
 \end{tabular}
 \end{frame}
 
-\begin{frame}{Measurement Units}
+\begin{frame}{Images: Measurement Units}
 \begin{itemize}
 \item \texttt{px} --- physical device pixels
 \item \texttt{dp} --- ``density-independent pixel''
@@ -60,25 +182,6 @@ devices, and you have to test your app on every single one of them.''
 On \texttt{mdpi}, 1 px = 1 dp. Not so on other densities!
 
 Devices vary both in their density and in their size in dp.
-\end{frame}
-
-\begin{frame}{Examples}
-
-\begin{itemize}
-\item Phones
-\begin{itemize}
-\item HTC G1: 480x320px, \texttt{mdpi} = 480x320dp (medium, notlong)
-\item Motorola Droid: 854x480px, \texttt{hdpi} = 570x320dp (medium, long)
-\item Samsung Dart: 320x240px, \texttt{ldpi} = 427x320dp (small, notlong)
-\item Galaxy Nexus: 1280x720px, \texttt{xhdpi} = 640x360dp (medium,
-  long)
-\end{itemize}
-\item Tablets
-\begin{itemize}
-\item Kindle Fire: 1024x600px, \texttt{mdpi} = 1024x600dp (large)
-\item Motorola Xoom: 1280x800px, \texttt{mdpi} = 1280x800dp (xlarge)
-\end{itemize}
-\end{itemize}
 \end{frame}
 
 \begin{frame}{But!}
@@ -89,24 +192,6 @@ Devices vary both in their density and in their size in dp.
 \includegraphics[width=3.5in]{densities.png}
 \item Maybe just \texttt{xhdpi} if you're feeling brave.
 \end{itemize}
-\end{frame}
-
-\begin{frame}{Directory structure}
-\includegraphics[width=3.5in]{nautilus.png}
-\end{frame}
-
-\begin{frame}{Additional qualifiers}
-Rarely need to use more than one of these at a time, but they can be helpful:
-\begin{itemize}
-\item OS Version: \texttt{v9} etc.
-\item Screen size: \texttt{small}, \texttt{medium} (phones);
-  \texttt{large}, \texttt{xlarge} (tablets)
-\item Language (and country): \texttt{en}, \texttt{es},
-  \texttt{en-rCA}
-\item Portrait/landscape: \texttt{port}, \texttt{land}
-\item Many others, see SDK docs if interested.
-\end{itemize}
-Note! This applies not just to images but also, strings, layout files, etc.
 \end{frame}
 
 \begin{frame}{9-Patch Images}
